@@ -37,20 +37,32 @@ fi
 
 # checkout 默认只拉当前分支, 这里把全部分支取回来。
 # 必须完整拉取(不能 --depth): 浅克隆推到 Gitee 会被拒 "shallow update not allowed"。
-git fetch --unshallow origin >/dev/null 2>&1 || true
-git fetch origin '+refs/heads/*:refs/remotes/origin/*' 2>/dev/null || true
+# 不再吞掉错误输出 —— 之前 2>/dev/null 导致 dist 拉不到时静默跳过, 查了半天。
+git fetch --unshallow origin 2>&1 | sed 's/^/  fetch: /' || true
+git fetch origin '+refs/heads/*:refs/remotes/origin/*' 2>&1 | sed 's/^/  fetch: /' || true
+echo "本地已跟踪的远端分支: $(git branch -r | tr -d ' ' | tr '\n' ' ')"
+echo "本地分支: $(git branch | tr -d '*' | tr -d ' ' | tr '\n' ' ')"
 
 for b in $BRANCHES; do
+	# 优先用远端跟踪 ref; 拿不到就退回本地分支
+	# (publish.sh 刚在本地建过 dist, 此时 origin/dist 可能还没同步到)
 	if git rev-parse --verify "origin/$b" >/dev/null 2>&1; then
-		echo "==> 推送 $b → ${HOST}/${USER}/${REPO}"
-		if ! git push -f "$REMOTE_URL" "refs/remotes/origin/$b:refs/heads/$b"; then
-			echo "推送失败: 确认 https://${HOST}/${USER}/${REPO} 是空仓库(没勾选初始化)、令牌勾了 projects 写权限"
-			echo "若报 shallow update not allowed, 说明是浅克隆 —— 检查 workflow 里 checkout 的 fetch-depth 是否为 0"
-			exit 1
-		fi
+		REF="refs/remotes/origin/$b"
+	elif git rev-parse --verify "refs/heads/$b" >/dev/null 2>&1; then
+		echo "  (origin/$b 不存在, 改用本地分支 $b)"
+		REF="refs/heads/$b"
 	else
-		echo "==> origin/$b 不存在, 跳过"
+		echo "==> $b 既没有 origin/$b 也没有本地分支, 跳过"
+		continue
+	fi
+
+	echo "==> 推送 $b ($REF) → ${HOST}/${USER}/${REPO}"
+	if ! git push -f "$REMOTE_URL" "$REF:refs/heads/$b"; then
+		echo "推送失败: 确认 https://${HOST}/${USER}/${REPO} 是空仓库(没勾选初始化)、令牌勾了 projects 写权限"
+		echo "若报 shallow update not allowed, 说明是浅克隆 —— 检查 workflow 里 checkout 的 fetch-depth 是否为 0"
+		exit 1
 	fi
 done
 
 echo "镜像同步完成"
+echo "远端分支: $(git ls-remote --heads "$REMOTE_URL" 2>/dev/null | sed 's#.*refs/heads/##' | tr '\n' ' ')"
