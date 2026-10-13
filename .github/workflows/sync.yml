@@ -21,7 +21,7 @@ jobs:
     steps:
       # fetch-depth: 0 必须开: 浅克隆(shallow)推到 Gitee 会被拒
       # (! [remote rejected] ... shallow update not allowed)
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
