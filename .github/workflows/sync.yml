@@ -1,0 +1,40 @@
+name: 同步插件二进制
+
+on:
+  schedule:
+    # 北京时间每周一 04:23 (UTC 周日 20:23); 避开整点, 减少排队等待
+    - cron: '23 20 * * 0'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: '强制重新发布(版本没变也推一次)'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 拉取二进制
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/fetch.py
+
+      - name: 发布到 dist 分支
+        env:
+          BRANCH: dist
+          FORCE: ${{ github.event.inputs.force || 'false' }}
+        run: bash scripts/publish.sh
+
+      - name: 汇总
+        run: |
+          echo '--- index.json ---'
+          cat out/index.json
+          echo '--- 目录 ---'
+          find out -type f | sort
