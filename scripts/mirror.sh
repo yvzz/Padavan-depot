@@ -35,14 +35,17 @@ if [ ! -d scripts ]; then
 	git checkout -q -f "${MAIN_BRANCH:-main}" 2>/dev/null || true
 fi
 
-# checkout 默认只拉当前分支, 这里把所有分支都取回来
-git fetch origin '+refs/heads/*:refs/remotes/origin/*' --depth=1 2>/dev/null || true
+# checkout 默认只拉当前分支, 这里把全部分支取回来。
+# 必须完整拉取(不能 --depth): 浅克隆推到 Gitee 会被拒 "shallow update not allowed"。
+git fetch --unshallow origin >/dev/null 2>&1 || true
+git fetch origin '+refs/heads/*:refs/remotes/origin/*' 2>/dev/null || true
 
 for b in $BRANCHES; do
 	if git rev-parse --verify "origin/$b" >/dev/null 2>&1; then
 		echo "==> 推送 $b → ${HOST}/${USER}/${REPO}"
 		if ! git push -f "$REMOTE_URL" "refs/remotes/origin/$b:refs/heads/$b"; then
-			echo "推送失败: 请先在 https://${HOST}/${USER}/${REPO} 建一个空仓库(不要勾选初始化), 并确认令牌有 projects 写权限"
+			echo "推送失败: 确认 https://${HOST}/${USER}/${REPO} 是空仓库(没勾选初始化)、令牌勾了 projects 写权限"
+			echo "若报 shallow update not allowed, 说明是浅克隆 —— 检查 workflow 里 checkout 的 fetch-depth 是否为 0"
 			exit 1
 		fi
 	else
