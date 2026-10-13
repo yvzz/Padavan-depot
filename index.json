@@ -1,0 +1,15 @@
+{
+  "updated": "2026-10-13T11:43:22Z",
+  "items": [
+    {
+      "name": "npc-yisier",
+      "repo": "yisier/nps",
+      "tag": "v0.26.39",
+      "asset": "linux_mipsle_client.tar.gz",
+      "path": "npc/yisier/linux_mipsle_client.tar.gz",
+      "size": 5444455,
+      "sha256": "4a495d43fb4e218e42e9235d140beb39893f1d57d3cb7b462129124b5d45b5f4",
+      "source": "https://github.com/yisier/nps/releases/download/v0.26.39/linux_mipsle_client.tar.gz"
+    }
+  ]
+}
