@@ -26,6 +26,15 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python3 scripts/fetch.py
 
+      # 汇总必须放在"发布"之前: publish.sh 会清空工作区重建 dist 分支,
+      # 跑完 out/ 就没了。
+      - name: 汇总
+        run: |
+          echo '--- index.json ---'
+          cat out/index.json
+          echo '--- 目录 ---'
+          find out -type f | sort
+
       - name: 发布到 dist 分支
         env:
           BRANCH: dist
@@ -39,10 +48,3 @@ jobs:
           GITEE_REPO: ${{ vars.GITEE_REPO || 'Padavan-depot' }}
           MIRROR_HOST: ${{ vars.MIRROR_HOST || 'gitee.com' }}
         run: bash scripts/mirror.sh
-
-      - name: 汇总
-        run: |
-          echo '--- index.json ---'
-          cat out/index.json
-          echo '--- 目录 ---'
-          find out -type f | sort
