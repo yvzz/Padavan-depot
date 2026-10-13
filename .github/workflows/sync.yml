@@ -32,6 +32,14 @@ jobs:
           FORCE: ${{ github.event.inputs.force || 'false' }}
         run: bash scripts/publish.sh
 
+      - name: 同步到 Gitee（没配 secrets 会自动跳过）
+        env:
+          GITEE_USER: ${{ secrets.GITEE_USER }}
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+          GITEE_REPO: ${{ vars.GITEE_REPO || 'Padavan-depot' }}
+          MIRROR_HOST: ${{ vars.MIRROR_HOST || 'gitee.com' }}
+        run: bash scripts/mirror.sh
+
       - name: 汇总
         run: |
           echo '--- index.json ---'

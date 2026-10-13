@@ -46,6 +46,66 @@ https://raw.githubusercontent.com/yvzz/Padavan-depot/dist/npc/yisier/linux_mipsl
 > jsDelivr 单文件上限 **20 MB**，超了会取不到；那种大文件走 raw 或自建服务器。
 > jsDelivr 对分支内容有 CDN 缓存，新版本推送后最长约 12 小时才全网生效。
 
+如果同步到了 Gitee（见下节），还多一个：
+
+```text
+https://gitee.com/你的用户名/Padavan-depot/raw/dist/npc/yisier/linux_mipsle_client.tar.gz
+```
+
+> Gitee 对**未登录访问 raw 文件**有限制，用之前必须先在路由器上实测能不能下到真文件（命令见下节第 5 步）。
+
+## 同步到 Gitee（可选）
+
+让每次同步后自动镜像一份到 Gitee，国内直连更快，也多一份备份。
+**没配置会自动跳过**，不影响主流程 —— 不想用可以完全忽略这一节。
+
+### 1. 在 Gitee 建一个空仓库
+
+`https://gitee.com/projects/new` → 仓库名 `Padavan-depot` → **不要勾选**「初始化仓库 / 设置模板 / 添加 .gitignore」，保持完全空白，否则首次推送会被拒。
+
+### 2. 生成 Gitee 私人令牌
+
+Gitee → 右上角头像 → **设置** → 左侧「**私人令牌**」→ 生成新令牌 → 勾选 **`projects`**（读写项目）→ 复制令牌字符串（只显示一次）。
+
+### 3. 在 GitHub 仓库里填 secrets
+
+`https://github.com/yvzz/Padavan-depot/settings/secrets/actions` → **New repository secret**：
+
+| Name | 值 |
+|---|---|
+| `GITEE_USER` | 你的 Gitee 用户名（空间地址，URL 里 `gitee.com/` 后面那段） |
+| `GITEE_TOKEN` | 上一步的私人令牌 |
+
+可选 repository **variables**（同名页面切到 Variables 标签）：
+
+| Name | 默认 | 说明 |
+|---|---|---|
+| `GITEE_REPO` | `Padavan-depot` | 目标仓库名 |
+| `MIRROR_HOST` | `gitee.com` | 换平台用，如 AtomGit 填 `atomgit.com` |
+
+令牌里的特殊字符脚本会自动 URL 编码，不用自己处理。
+
+### 4. 触发一次
+
+Actions →「同步插件二进制」→ **Run workflow**。日志末尾出现「镜像同步完成」就成功了；若报「推送失败」，多半是仓库非空或令牌没勾 `projects` 权限。
+
+之后每次定时同步都会自动带上镜像。推送只覆盖 `main` 和 `dist` 两个分支，不会删你在 Gitee 上的其它分支。
+
+顺手在 Gitee 仓库「管理 → 仓库设置 → 默认分支」把默认分支改成 `main`（空仓库默认是 `master`，推过去之后 master 是空的）。
+
+### 5. 务必先验证匿名能下载
+
+Gitee 未登录访问 raw 文件可能被拦（返回登录页 HTML），**在路由器 ssh 上跑一次确认**：
+
+```sh
+curl -skL -o /tmp/npc.tgz -w "HTTP:%{http_code} 大小:%{size_download}\n" \
+  https://gitee.com/你的用户名/Padavan-depot/raw/dist/npc/yisier/linux_mipsle_client.tar.gz
+head -c 2 /tmp/npc.tgz | od -An -tx1     # 正常应是 1f 8b(gzip 魔数)
+```
+
+- 大小 ≈ 5.4MB 且魔数是 `1f 8b` → 可用，把该地址填进固件。
+- 大小只有几 KB / 魔数不是 `1f 8b` → 被拦了，改回 jsDelivr 或 GitHub raw；或者把文件放到 Gitee 的**发行版附件**里（附件匿名可下载，但需要额外脚本，暂未实现）。
+
 ## 固件里怎么用
 
 NPC 页面新增了「**自定义下载地址**」（固件提交 `9cc0e8cc7`），填入上面的完整直链即可：
