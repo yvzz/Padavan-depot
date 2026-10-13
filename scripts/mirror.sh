@@ -28,6 +28,13 @@ fi
 ENC="$(python3 -c "import urllib.parse,os;print(urllib.parse.quote(os.environ['GITEE_TOKEN'],safe=''))")"
 REMOTE_URL="https://${USER}:${ENC}@${HOST}/${USER}/${REPO}.git"
 
+# 防御: 若上一步 publish.sh 之后工作区还停在 dist 分支(已被清空), 先切回主分支,
+# 否则 git fetch / push 虽能跑, 但工作区状态与预期不一致。
+if [ ! -d scripts ]; then
+	echo "工作区不在主分支, 切回 ${MAIN_BRANCH:-main}"
+	git checkout -q -f "${MAIN_BRANCH:-main}" 2>/dev/null || true
+fi
+
 # checkout 默认只拉当前分支, 这里把所有分支都取回来
 git fetch origin '+refs/heads/*:refs/remotes/origin/*' --depth=1 2>/dev/null || true
 
