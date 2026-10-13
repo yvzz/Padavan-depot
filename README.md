@@ -16,12 +16,9 @@ Padavan 固件用的**二进制仓库站**。定时从各项目 GitHub release �
 
 ```text
 index.json                                  所有包的版本/大小/sha256 汇总
-npc/yisier/linux_mipsle_client.tar.gz       yisier/nps → v0.26.x（默认）
+npc/yisier/linux_mipsle_client.tar.gz       yisier/nps → v0.26.x
 npc/yisier/version.txt                      版本号
 npc/yisier/linux_mipsle_client.tar.gz.sha256
-npc/djylb/linux_mipsle_client.tar.gz        djylb/nps  → v0.34.x
-npc/djylb/version.txt
-npc/djylb/linux_mipsle_client.tar.gz.sha256
 ```
 
 ## 定时
@@ -117,7 +114,7 @@ https://cdn.jsdelivr.net/gh/yvzz/Padavan-depot@dist/npc/yisier/linux_mipsle_clie
 填了之后 npc 就**只走这个地址**：不查 GitHub 版本、不做路径拼接、完全绕开 GitHub。
 地址变了才会重新下载（版本标记用的就是地址本身）。
 
-服务端是 0.26.x 就用 `npc/yisier/...`，是 0.34.x 就用 `npc/djylb/...`，**客户端与服务端版本必须匹配**。
+只保留 `npc/yisier/...`（yisier/nps，v0.26.x）。`djylb/nps`（v0.34.x）已移除——客户端必须与服务端版本匹配，实测 v0.34.x 客户端连不上 v0.26.x 的服务端。
 
 ## 加一个新包
 
